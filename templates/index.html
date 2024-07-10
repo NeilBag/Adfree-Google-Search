@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Search App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Google Search App</h1>
+        <form id="search-form" class="form-inline justify-content-center">
+            <input type="text" id="query" class="form-control mr-2" placeholder="Enter your query" required
+                style="width: 300%;">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+        <div id="download-email-top" class="mt-3" style="display: none;">
+            <button id="download-btn-top" class="btn btn-success">Download as Excel</button>
+            <form id="email-form-top" class="form-inline mt-2">
+                <input type="email" id="email-top" class="form-control mr-2" placeholder="Enter your email" required>
+                <button type="submit" class="btn btn-info">Email Results</button>
+            </form>
+        </div>
+        <div id="results" class="mt-5"></div>
+        <div id="download-email-bottom" class="mt-3" style="display: none;">
+            <button id="download-btn-bottom" class="btn btn-success">Download as Excel</button>
+            <form id="email-form-bottom" class="form-inline mt-2">
+                <input type="email" id="email-bottom" class="form-control mr-2" placeholder="Enter your email" required>
+                <button type="submit" class="btn btn-info">Email Results</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+            const response = await fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    searchQuery: query
+                }),
+            });
+            const results = await response.json();
+            if (response.ok) {
+                displayResults(results);
+            } else {
+                alert(results.error);
+            }
+        });
+
+        document.getElementById('download-btn-top').addEventListener('click', async () => {
+            downloadResults();
+        });
+
+        document.getElementById('download-btn-bottom').addEventListener('click', async () => {
+            downloadResults();
+        });
+
+        document.getElementById('email-form-top').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            emailResults('email-top');
+        });
+
+        document.getElementById('email-form-bottom').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            emailResults('email-bottom');
+        });
+
+        async function downloadResults() {
+            const results = getResultsFromTable();
+            const response = await fetch('/api/excel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    results
+                }),
+            });
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'GoogleSearchResults.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        async function emailResults(emailFieldId) {
+            const email = document.getElementById(emailFieldId).value;
+            const query = document.getElementById('query').value;
+            const results = getResultsFromTable();
+            const response = await fetch('/api/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    results,
+                    recipientEmail: email,
+                    searchQuery: query
+                }),
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+            } else {
+                alert(result.error);
+            }
+        }
+
+        function displayResults(results) {
+            let html = `
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Link</th>
+                            <th>Snippet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            results.forEach(result => {
+                html += `
+                    <tr>
+                        <td>${result.Title}</td>
+                        <td><a href="${result.Link}" target="_blank">${result.Link}</a></td>
+                        <td>${result.Snippet}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table>';
+            document.getElementById('results').innerHTML = html;
+            document.getElementById('download-email-top').style.display = 'block';
+            document.getElementById('download-email-bottom').style.display = 'block';
+        }
+
+        function getResultsFromTable() {
+            const rows = document.querySelectorAll('#results table tbody tr');
+            const results = [];
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                results.push({
+                    Title: cells[0].innerText,
+                    Link: cells[1].innerText,
+                    Snippet: cells[2].innerText,
+                });
+            });
+            return results;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .table th,
+        .table td {
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Search Results for '{{ query }}'</h1>
+        <div class="table-responsive">
+            {{ tables|safe }}
+        </div>
+        <form action="/download" method="POST" class="mt-3">
+            <input type="hidden" name="query" value="{{ query }}">
+            <button type="submit" class="btn btn-success">Download as Excel</button>
+        </form>
+        <form action="/email" method="POST" class="mt-3">
+            <input type="hidden" name="query" value="{{ query }}">
+            <div class="form-group">
+                <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+            <button type="submit" class="btn btn-info">Email Results</button>
+        </form>
+    </div>
+</body>
+
+</html>
