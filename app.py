@@ -19,7 +19,7 @@ email_config = {
     'secure': False,
     'auth': {
         'user': 'bagchineil518@gmail.com',
-        'pass': 'vyyq qbgl ckat gttp',
+        'pass': 'sjnr txjk cbye kbmf',
     },
 }
 
